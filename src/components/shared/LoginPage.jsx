@@ -28,13 +28,8 @@ export default function LoginPage() {
           return
         }
         if (data?.session) {
-          // Check if this was a recovery — if so show password form
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user?.recovery_sent_at) {
-            setMode('recovery')
-          } else {
-            redirectByRole(data.session.user.id)
-          }
+          // A ?code= on /login always means password recovery
+          setMode('recovery')
         }
         return
       }
@@ -61,10 +56,8 @@ export default function LoginPage() {
         return
       }
 
-      if (type === 'recovery') {
+      if (type === 'recovery' || data?.session) {
         setMode('recovery')
-      } else if (data?.session) {
-        redirectByRole(data.session.user.id)
       }
     }
 
