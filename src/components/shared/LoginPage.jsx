@@ -11,7 +11,8 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState('')
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [mode, setMode] = useState('login') // 'login' | 'recovery'
+  const [mode, setMode] = useState('login') // 'login' | 'recovery' | 'forgot'
+  const [resetSent, setResetSent] = useState(false)
 
   useEffect(() => {
     async function handleAuthCallback() {
@@ -87,8 +88,14 @@ export default function LoginPage() {
     setError(null)
     setSubmitting(true)
     try {
-      await signIn(email, password)
-      navigate('/')
+      const data = await signIn(email, password)
+      // Fetch profile directly so we can route immediately without waiting for useAuth to re-render
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+      navigate(profile?.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard')
     } catch (err) {
       setError(err.message ?? 'Login failed. Check your credentials.')
     } finally {
@@ -111,6 +118,26 @@ export default function LoginPage() {
       alert('Password set! You can now log in.')
     } catch (err) {
       setError(err.message ?? 'Failed to set password.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      setError('Enter your email address above first.')
+      return
+    }
+    setError(null)
+    setSubmitting(true)
+    try {
+      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/login',
+      })
+      if (resetErr) throw resetErr
+      setResetSent(true)
+    } catch (err) {
+      setError(err.message ?? 'Failed to send reset email.')
     } finally {
       setSubmitting(false)
     }
@@ -206,6 +233,19 @@ export default function LoginPage() {
             >
               {submitting ? 'Signing in...' : 'Sign In'}
             </button>
+
+            {resetSent ? (
+              <p className='text-center text-xs text-green-600'>Reset email sent! Check your inbox.</p>
+            ) : (
+              <button
+                type='button'
+                onClick={handleForgotPassword}
+                disabled={submitting}
+                className='text-center text-xs text-gray-400 hover:text-brand-terra transition-colors underline underline-offset-2 disabled:opacity-50'
+              >
+                Forgot password?
+              </button>
+            )}
           </div>
         )}
 
