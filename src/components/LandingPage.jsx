@@ -20,6 +20,12 @@ function useReveal(threshold = 0.15) {
   return [ref, vis];
 }
 
+/* ─── SMOOTH SCROLL ─── */
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 /* ─── COUNTER ─── */
 function Counter({ to, suffix = "", duration = 1600 }) {
   const [val, setVal] = useState(0);
@@ -278,7 +284,7 @@ function StepCard({ num, title, desc, delay }) {
   );
 }
 
-/* ─── STAT ITEM (extracted to fix hooks-in-loops) ─── */
+/* ─── STAT ITEM ─── */
 function StatItem({ val, suf, label, custom, delay, index }) {
   const [ref, vis] = useReveal(0.3);
   return (
@@ -298,8 +304,8 @@ function StatItem({ val, suf, label, custom, delay, index }) {
   );
 }
 
-/* ─── SECTION HEADER (extracted to fix hooks-in-IIFEs) ─── */
-function SectionHeader({ eyebrow, eyebrowColor, headline, sub, subColor, mb = "44px" }) {
+/* ─── SECTION HEADER ─── */
+function SectionHeader({ eyebrow, eyebrowColor, headline, mb = "44px" }) {
   const [ref, vis] = useReveal(0.15);
   return (
     <div ref={ref} style={{
@@ -317,10 +323,30 @@ function SectionHeader({ eyebrow, eyebrowColor, headline, sub, subColor, mb = "4
   );
 }
 
-/* ─── CTA SECTION (extracted to fix hooks-in-IIFEs) ─── */
+/* ─── CTA SECTION ─── */
 function CTASection() {
   const [ref, vis] = useReveal(0.15);
+  const [email, setEmail] = useState("");
   const [emailFocused, setEmailFocused] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | error | success
+  const [errorMsg, setErrorMsg] = useState("");
+
+  function handleSend() {
+    if (!email.trim()) {
+      setErrorMsg("Please enter your email address.");
+      setStatus("error");
+      return;
+    }
+    // Basic email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErrorMsg("Please enter a valid email address.");
+      setStatus("error");
+      return;
+    }
+    // Success — in a real app you'd POST to an API here
+    setStatus("success");
+  }
+
   return (
     <div ref={ref} style={{
       maxWidth: "440px", margin: "0 auto", textAlign: "center",
@@ -336,36 +362,118 @@ function CTASection() {
       <p style={{ fontSize: "13px", color: T.mid, lineHeight: 1.7, marginBottom: "28px" }}>
         Drop your email — we'll send available properties and your application link.
       </p>
-      <div style={{ display: "flex", gap: "8px", maxWidth: "380px", margin: "0 auto" }}>
+
+      {status === "success" ? (
         <div style={{
-          flex: 1, borderRadius: "10px", overflow: "hidden",
-          border: `1px solid ${emailFocused ? T.terra : T.tanGhost}`,
-          boxShadow: emailFocused ? `0 0 0 3px ${T.terraFaded}` : "none",
-          transition: "all 300ms ease",
+          padding: "20px 24px", borderRadius: "12px",
+          background: T.bgCard, border: `1px solid ${T.olive}44`,
+          color: T.olive, fontSize: "14px", lineHeight: 1.6,
         }}>
-          <input type="email" placeholder="you@email.com"
-            onFocus={() => setEmailFocused(true)}
-            onBlur={() => setEmailFocused(false)}
-            style={{
-              width: "100%", padding: "13px 14px", border: "none",
-              background: T.bgCard, color: T.tan, fontSize: "13px",
-              fontFamily: font, outline: "none",
-            }} />
+          Thanks! We'll be in touch soon.
         </div>
-        <button style={{
-          padding: "13px 22px", borderRadius: "10px", border: "none",
-          background: T.terra, color: "#fff", fontSize: "12px",
-          fontFamily: font, fontWeight: 500, cursor: "pointer",
-          boxShadow: `0 4px 18px ${T.terraGlow}`, transition: "transform 200ms ease",
-        }}
-          onMouseEnter={e => e.target.style.transform = "translateY(-1px)"}
-          onMouseLeave={e => e.target.style.transform = "translateY(0)"}
-        >Send</button>
-      </div>
+      ) : (
+        <>
+          <div className="cta-form-row">
+            <div style={{
+              flex: 1, borderRadius: "10px", overflow: "hidden",
+              border: `1px solid ${status === "error" ? "#c0392b88" : emailFocused ? T.terra : T.tanGhost}`,
+              boxShadow: emailFocused ? `0 0 0 3px ${T.terraFaded}` : "none",
+              transition: "all 300ms ease",
+            }}>
+              <input
+                type="email"
+                placeholder="you@email.com"
+                value={email}
+                onChange={e => { setEmail(e.target.value); if (status === "error") setStatus("idle"); }}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+                onKeyDown={e => e.key === "Enter" && handleSend()}
+                style={{
+                  width: "100%", padding: "13px 14px", border: "none",
+                  background: T.bgCard, color: T.tan, fontSize: "13px",
+                  fontFamily: font, outline: "none",
+                }}
+              />
+            </div>
+            <button
+              onClick={handleSend}
+              style={{
+                padding: "13px 22px", borderRadius: "10px", border: "none",
+                background: T.terra, color: "#fff", fontSize: "12px",
+                fontFamily: font, fontWeight: 500, cursor: "pointer",
+                boxShadow: `0 4px 18px ${T.terraGlow}`, transition: "transform 200ms ease",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={e => e.target.style.transform = "translateY(-1px)"}
+              onMouseLeave={e => e.target.style.transform = "translateY(0)"}
+            >Send</button>
+          </div>
+          {status === "error" && (
+            <div style={{ fontSize: "11px", color: "#e74c3c", marginTop: "6px", textAlign: "left" }}>
+              {errorMsg}
+            </div>
+          )}
+        </>
+      )}
       <div style={{ fontSize: "9px", color: T.dim, marginTop: "10px" }}>
         No spam. Just available units and how to apply.
       </div>
     </div>
+  );
+}
+
+/* ─── HAMBURGER MENU ─── */
+function HamburgerMenu() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        className="hamburger-btn"
+        onClick={() => setOpen(o => !o)}
+        aria-label="Toggle menu"
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          display: "none", flexDirection: "column", gap: "5px",
+          padding: "6px", marginRight: "4px",
+        }}
+      >
+        <span style={{ display: "block", width: "20px", height: "1.5px", background: open ? T.terra : T.tan, transition: "all 250ms ease", transform: open ? "rotate(45deg) translateY(6.5px)" : "none" }} />
+        <span style={{ display: "block", width: "20px", height: "1.5px", background: open ? T.terra : T.tan, transition: "all 250ms ease", opacity: open ? 0 : 1 }} />
+        <span style={{ display: "block", width: "20px", height: "1.5px", background: open ? T.terra : T.tan, transition: "all 250ms ease", transform: open ? "rotate(-45deg) translateY(-6.5px)" : "none" }} />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "fixed", top: "56px", left: 0, right: 0, zIndex: 99,
+          background: "rgba(26,22,18,0.97)", backdropFilter: "blur(16px)",
+          borderBottom: `1px solid ${T.tanFaded}`,
+          padding: "16px 24px 20px",
+          display: "flex", flexDirection: "column", gap: "2px",
+        }}>
+          {["Tenants", "Properties", "About", "Contact"].map(item => (
+            <button key={item}
+              onClick={() => setOpen(false)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                textAlign: "left", padding: "12px 0",
+                fontSize: "13px", color: T.mid, letterSpacing: "1px",
+                textTransform: "uppercase", borderBottom: `1px solid ${T.tanFaded}`,
+                fontFamily: font, transition: "color 200ms ease",
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = T.tan}
+              onMouseLeave={e => e.currentTarget.style.color = T.mid}
+            >{item}</button>
+          ))}
+          <a href="/login" onClick={() => setOpen(false)} style={{
+            display: "block", marginTop: "12px", padding: "12px 20px",
+            borderRadius: "8px", background: T.terra, color: "#fff",
+            textDecoration: "none", fontSize: "12px", fontWeight: 500,
+            letterSpacing: "1px", textTransform: "uppercase", textAlign: "center",
+          }}>Tenant Login</a>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -407,16 +515,16 @@ export default function LandingPage() {
         </div>
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
           {["Tenants", "Properties", "About", "Contact"].map((item) => (
-            <a key={item} href="#" style={{
+            <a key={item} href="#" className="nav-link" style={{
               fontSize: "11px", color: T.mid, textDecoration: "none",
               letterSpacing: "1px", textTransform: "uppercase",
               transition: "color 200ms ease", display: "none",
             }}
-              className="nav-link"
               onMouseEnter={e => e.target.style.color = T.tan}
               onMouseLeave={e => e.target.style.color = T.mid}
             >{item}</a>
           ))}
+          <HamburgerMenu />
           <a href="/login" style={{
             fontSize: "10px", padding: "7px 16px", borderRadius: "6px",
             background: T.terra, color: "#fff", textDecoration: "none",
@@ -473,24 +581,29 @@ export default function LandingPage() {
               Pay rent, sign leases, and submit maintenance requests — all from one portal built for real people.
             </p>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", animation: "fadeUp 700ms ease 450ms forwards", opacity: 0 }}>
-              <a href="#cta" style={{
-                padding: "13px 28px", borderRadius: "10px",
-                background: T.terra, color: "#fff", textDecoration: "none",
-                fontSize: "13px", fontWeight: 500, letterSpacing: "0.5px",
-                boxShadow: `0 4px 20px ${T.terraGlow}`, transition: "transform 200ms ease, box-shadow 200ms ease",
-              }}
+              <button
+                onClick={() => scrollTo("cta")}
+                style={{
+                  padding: "13px 28px", borderRadius: "10px",
+                  background: T.terra, color: "#fff", border: "none",
+                  fontSize: "13px", fontWeight: 500, letterSpacing: "0.5px",
+                  boxShadow: `0 4px 20px ${T.terraGlow}`, transition: "transform 200ms ease, box-shadow 200ms ease",
+                  cursor: "pointer", fontFamily: font,
+                }}
                 onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 28px ${T.terraGlow}`; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = `0 4px 20px ${T.terraGlow}`; }}
-              >Apply Now</a>
-              <a href="#features" style={{
-                padding: "13px 28px", borderRadius: "10px",
-                background: "transparent", color: T.tan, textDecoration: "none",
-                fontSize: "13px", letterSpacing: "0.5px", border: `1px solid ${T.tanGhost}`,
-                transition: "all 200ms ease",
-              }}
+              >Apply Now</button>
+              <button
+                onClick={() => scrollTo("features")}
+                style={{
+                  padding: "13px 28px", borderRadius: "10px",
+                  background: "transparent", color: T.tan, border: `1px solid ${T.tanGhost}`,
+                  fontSize: "13px", letterSpacing: "0.5px",
+                  transition: "all 200ms ease", cursor: "pointer", fontFamily: font,
+                }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = T.tan; e.currentTarget.style.background = T.tanFaded; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.tanGhost; e.currentTarget.style.background = "transparent"; }}
-              >View Properties</a>
+              >View Properties</button>
             </div>
           </div>
 
@@ -512,7 +625,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── STATS ─── */}
-      <section style={{ padding: "36px 24px", display: "flex", justifyContent: "center", gap: "1px", background: T.tanFaded }}>
+      <section style={{ padding: "36px 24px", display: "flex", justifyContent: "center", gap: "1px", background: T.tanFaded, flexWrap: "wrap" }}>
         {[
           { val: 100, suf: "%", label: "Occupancy" },
           { val: 4, suf: "+", label: "Years" },
@@ -524,7 +637,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FEATURES ─── */}
-      <section id="features" style={{ padding: "90px 24px", maxWidth: "960px", margin: "0 auto" }}>
+      <section id="features" style={{ padding: "70px 24px", maxWidth: "960px", margin: "0 auto" }}>
         <SectionHeader
           eyebrow="Why In Time"
           headline={`Everything your landlord<br/><span style="color:rgba(196,168,130,0.55)">should</span> already offer.`}
@@ -547,7 +660,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── HOW IT WORKS ─── */}
-      <section style={{ padding: "70px 24px", background: T.bgAlt, borderTop: `1px solid ${T.tanFaded}`, borderBottom: `1px solid ${T.tanFaded}` }}>
+      <section style={{ padding: "60px 24px", background: T.bgAlt, borderTop: `1px solid ${T.tanFaded}`, borderBottom: `1px solid ${T.tanFaded}` }}>
         <div style={{ maxWidth: "500px", margin: "0 auto" }}>
           <SectionHeader
             eyebrow="Getting Started" eyebrowColor={T.olive}
@@ -563,7 +676,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── TESTIMONIALS ─── */}
-      <section style={{ padding: "90px 24px", maxWidth: "900px", margin: "0 auto" }}>
+      <section style={{ padding: "70px 24px", maxWidth: "900px", margin: "0 auto" }}>
         <SectionHeader
           eyebrow="Our Tenants"
           headline={`What it's like to rent <span style="color:${T.olive}">with us</span>.`}
@@ -580,7 +693,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── CTA ─── */}
-      <section id="cta" style={{ padding: "70px 24px", background: `linear-gradient(180deg, ${T.bg}, ${T.bgAlt})`, borderTop: `1px solid ${T.tanFaded}` }}>
+      <section id="cta" style={{ padding: "60px 24px", background: `linear-gradient(180deg, ${T.bg}, ${T.bgAlt})`, borderTop: `1px solid ${T.tanFaded}` }}>
         <CTASection />
       </section>
 
@@ -618,7 +731,28 @@ export default function LandingPage() {
         @keyframes fadeUp { 0% { opacity:0; transform:translateY(22px); } 100% { opacity:1; transform:translateY(0); } }
         @keyframes fadeDown { 0% { opacity:0; transform:translateY(-10px); } 100% { opacity:1; transform:translateY(0); } }
         @keyframes scrollPulse { 0%,100% { opacity:0.3; } 50% { opacity:0.6; } }
+
+        /* Desktop nav links */
         @media (min-width: 640px) { .nav-link { display: inline !important; } }
+
+        /* Hamburger: show only below 640px */
+        @media (max-width: 639px) { .hamburger-btn { display: flex !important; } }
+
+        /* CTA form: stack on mobile */
+        .cta-form-row {
+          display: flex;
+          gap: 8px;
+          max-width: 380px;
+          margin: 0 auto;
+        }
+        @media (max-width: 480px) {
+          .cta-form-row {
+            flex-direction: column;
+          }
+          .cta-form-row button {
+            width: 100%;
+          }
+        }
       `}</style>
     </div>
   );
