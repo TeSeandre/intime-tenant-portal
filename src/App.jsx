@@ -57,6 +57,7 @@ export default function App() {
       <Routes>
         <Route path='/' element={<RootRedirect />} />
         <Route path='/login' element={<LoginPage />} />
+        <Route path='/reset-password' element={<LoginPage />} />
 
         {/* Tenant routes */}
         <Route path='/tenant/dashboard' element={<RequireTenant><TenantDashboard /></RequireTenant>} />
