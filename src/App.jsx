@@ -44,11 +44,7 @@ function RequireAdmin({ children }) {
 }
 
 function RootRedirect() {
-  const { loading, session, profile } = useAuth()
-  if (loading) return <HouseSpinner />
-  if (!session) return <LandingPage />
-  if (!profile) return <HouseSpinner />
-  return <Navigate to={profile.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard'} replace />
+  return <LandingPage />
 }
 
 export default function App() {
