@@ -757,7 +757,7 @@ export default function LandingPage() {
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
           <span style={{ fontSize: "11px", color: T.dim, letterSpacing: "1px", textTransform: "uppercase" }}>I am a</span>
           <button
-            onClick={() => scrollTo("features")}
+            onClick={() => scrollTo("cta")}
             style={{
               padding: "9px 22px", borderRadius: "8px", border: `1px solid ${T.terra}`,
               background: T.terraFaded, color: T.terra, fontSize: "11px",
