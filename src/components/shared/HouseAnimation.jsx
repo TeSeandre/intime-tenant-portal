@@ -1,7 +1,6 @@
 /**
  * Shared house build animation — used on landing page hero and loading screen.
- * Variant is chosen randomly per session (sessionStorage) so it changes on reload
- * but stays consistent within the same session.
+ * Variant rotates sequentially on every page load (blueprint → brick → silhouette → repeat).
  * Colors come from the daily theme (T from src/lib/theme.js).
  */
 import { useState, useEffect, useRef } from "react"
@@ -13,13 +12,11 @@ export const TOTAL_PHASES = 8
 const VARIANTS = ["blueprint", "brick", "silhouette"]
 
 export function getSessionVariant() {
-  const key = "houseVariant"
-  let v = sessionStorage.getItem(key)
-  if (!v || !VARIANTS.includes(v)) {
-    v = VARIANTS[Math.floor(Math.random() * VARIANTS.length)]
-    sessionStorage.setItem(key, v)
-  }
-  return v
+  const key = "houseVariantIndex"
+  const current = parseInt(sessionStorage.getItem(key) ?? "-1", 10)
+  const next = (current + 1) % VARIANTS.length
+  sessionStorage.setItem(key, String(next))
+  return VARIANTS[next]
 }
 
 /* ─── VARIANT A: Blueprint-to-Solid ─── */
