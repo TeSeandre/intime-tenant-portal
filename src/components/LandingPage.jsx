@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import T from "../lib/theme";
 import { supabase } from "../lib/supabase";
+import HouseAnimation, { houseAnimationKeyframes } from "./shared/HouseAnimation";
 const font = "'DM Sans', 'Avenir Next', sans-serif";
 const serif = "'Playfair Display', 'Georgia', serif";
 
@@ -43,154 +44,6 @@ function Counter({ to, suffix = "", duration = 1600 }) {
     requestAnimationFrame(tick);
   }, [vis, to, duration]);
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
-}
-
-/* ─── HERO HOUSE ─── */
-const PHASE_MS = 280;
-const PHASES = 8;
-
-function HeroBuildHouse() {
-  const [phase, setPhase] = useState(0);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      let p = 0;
-      const iv = setInterval(() => {
-        p++;
-        setPhase(p);
-        if (p >= PHASES) {
-          clearInterval(iv);
-          setTimeout(() => setDone(true), 200);
-        }
-      }, PHASE_MS);
-      return () => clearInterval(iv);
-    }, 600);
-    return () => clearTimeout(delay);
-  }, []);
-
-  const vis = (min) => ({
-    opacity: phase >= min ? 1 : 0,
-    transform: phase >= min ? "translateY(0)" : "translateY(6px)",
-    transition: `all ${PHASE_MS * 0.7}ms cubic-bezier(0.34,1.56,0.64,1)`,
-  });
-  const draw = (min) => ({
-    strokeDasharray: 300,
-    strokeDashoffset: phase >= min ? 0 : 300,
-    transition: `stroke-dashoffset ${PHASE_MS}ms ease-out`,
-  });
-  const pop = (min, delay = 0) => ({
-    opacity: phase >= min ? 1 : 0,
-    transform: phase >= min ? "scale(1)" : "scale(0)",
-    transition: `all ${PHASE_MS * 0.55}ms cubic-bezier(0.34,1.56,0.64,1) ${delay}ms`,
-    transformOrigin: "center center",
-  });
-
-  return (
-    <div style={{ position: "relative" }}>
-      <svg viewBox="0 0 400 300" width="100%" style={{
-        maxWidth: "460px", overflow: "visible",
-        filter: done ? "drop-shadow(0 16px 40px rgba(0,0,0,0.4))" : "none",
-        transition: "filter 600ms ease",
-      }}>
-        <line x1="50" y1="260" x2="350" y2="260" stroke={T.tanGhost} strokeWidth="1" style={draw(0)} />
-        <ellipse cx="200" cy="264" rx="140" ry="6" fill={T.tanFaded} style={vis(0)} />
-        <rect x="90" y="248" width="220" height="12" rx="2"
-          fill={phase >= 1 ? T.tanFaded : "none"} stroke={T.tan} strokeWidth="1.5"
-          strokeDasharray={phase >= 2 ? "none" : "4,3"}
-          style={{ ...vis(1), transition: `all ${PHASE_MS}ms ease` }} />
-        <line x1="96" y1="248" x2="96" y2="165" stroke={T.tan} strokeWidth={phase >= 3 ? 2 : 1} strokeDasharray={phase >= 3 ? "none" : "4,3"} style={draw(2)} />
-        <line x1="304" y1="248" x2="304" y2="165" stroke={T.tan} strokeWidth={phase >= 3 ? 2 : 1} strokeDasharray={phase >= 3 ? "none" : "4,3"} style={draw(2)} />
-        <line x1="88" y1="165" x2="312" y2="165" stroke={T.tan} strokeWidth={phase >= 3 ? 2 : 1} strokeDasharray={phase >= 3 ? "none" : "4,3"} style={draw(3)} />
-        <rect x="96" y="165" width="208" height="83" fill={phase >= 3 ? T.tanFaded : "transparent"} style={{ transition: `fill ${PHASE_MS}ms ease` }} />
-        <line x1="96" y1="165" x2="150" y2="210" stroke={T.tanFaded} strokeWidth="0.8" style={draw(3)} />
-        <line x1="304" y1="165" x2="250" y2="210" stroke={T.tanFaded} strokeWidth="0.8" style={draw(3)} />
-        <line x1="75" y1="168" x2="200" y2="82" stroke={T.terra} strokeWidth={phase >= 5 ? 2.5 : 1.5} strokeDasharray={phase >= 5 ? "none" : "5,4"} style={draw(4)} />
-        <line x1="325" y1="168" x2="200" y2="82" stroke={T.terra} strokeWidth={phase >= 5 ? 2.5 : 1.5} strokeDasharray={phase >= 5 ? "none" : "5,4"} style={draw(4)} />
-        <polygon points="200,82 75,168 325,168" fill={phase >= 5 ? T.terraFaded : "transparent"} style={{ transition: `fill ${PHASE_MS}ms ease` }} />
-        <line x1="140" y1="124" x2="260" y2="124" stroke={T.terraGlow} strokeWidth="0.8" style={draw(5)} />
-        <g style={vis(5)}>
-          <rect x="255" y="86" width="18" height="42" rx="2" fill={T.bgCard} stroke={T.tan} strokeWidth="1.2" />
-          <line x1="251" y1="86" x2="276" y2="86" stroke={T.tan} strokeWidth="2" />
-        </g>
-        {done && (
-          <>
-            <circle cx="264" cy="74" r="3.5" fill="rgba(196,168,130,0.08)">
-              <animate attributeName="cy" values="74;48" dur="2.8s" repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.12;0" dur="2.8s" repeatCount="indefinite" />
-              <animate attributeName="r" values="3.5;9" dur="2.8s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="268" cy="64" r="2.5" fill="rgba(196,168,130,0.06)">
-              <animate attributeName="cy" values="64;32" dur="3.2s" repeatCount="indefinite" begin="0.7s" />
-              <animate attributeName="opacity" values="0.1;0" dur="3.2s" repeatCount="indefinite" begin="0.7s" />
-              <animate attributeName="r" values="2.5;8" dur="3.2s" repeatCount="indefinite" begin="0.7s" />
-            </circle>
-          </>
-        )}
-        <g style={pop(6, 0)}>
-          <rect x="118" y="188" width="36" height="36" rx="3" fill={T.tanFaded} stroke={T.tan} strokeWidth="1.2" />
-          <line x1="136" y1="188" x2="136" y2="224" stroke={T.tan} strokeWidth="0.8" />
-          <line x1="118" y1="206" x2="154" y2="206" stroke={T.tan} strokeWidth="0.8" />
-          {done && (
-            <rect x="119" y="189" width="34" height="34" rx="2.5" fill={T.terraGlow}>
-              <animate attributeName="opacity" values="0.25;0.55;0.25" dur="4s" repeatCount="indefinite" />
-            </rect>
-          )}
-        </g>
-        <g style={pop(6, 100)}>
-          <rect x="246" y="188" width="36" height="36" rx="3" fill={T.tanFaded} stroke={T.tan} strokeWidth="1.2" />
-          <line x1="264" y1="188" x2="264" y2="224" stroke={T.tan} strokeWidth="0.8" />
-          <line x1="246" y1="206" x2="282" y2="206" stroke={T.tan} strokeWidth="0.8" />
-          {done && (
-            <rect x="247" y="189" width="34" height="34" rx="2.5" fill={T.terraGlow}>
-              <animate attributeName="opacity" values="0.2;0.5;0.2" dur="4.5s" repeatCount="indefinite" begin="1s" />
-            </rect>
-          )}
-        </g>
-        <g style={pop(6, 180)}>
-          <rect x="178" y="202" width="44" height="46" rx="4" fill={T.terraFaded} stroke={T.terra} strokeWidth="1.2" />
-          <path d="M178,214 Q200,202 222,214" fill="none" stroke={T.tanGhost} strokeWidth="0.8" />
-          <circle cx="213" cy="228" r="2.5" fill={T.terra} style={pop(7, 60)} />
-        </g>
-        <rect x="172" y="248" width="56" height="5" rx="1.5" fill={T.tanGhost} style={vis(7)} />
-        <g style={vis(7)}>
-          <line x1="188" y1="253" x2="178" y2="275" stroke={T.tanGhost} strokeWidth="0.8" strokeDasharray="3,3" />
-          <line x1="212" y1="253" x2="222" y2="275" stroke={T.tanGhost} strokeWidth="0.8" strokeDasharray="3,3" />
-        </g>
-        <g style={pop(7, 200)}>
-          <line x1="55" y1="258" x2="55" y2="228" stroke={T.olive} strokeWidth="2" opacity="0.5" />
-          <circle cx="55" cy="222" r="12" fill={T.oliveFaded} stroke={T.oliveGlow} strokeWidth="0.6" />
-          <circle cx="55" cy="215" r="8" fill={T.oliveFaded} />
-        </g>
-        <g style={pop(7, 320)}>
-          <line x1="350" y1="258" x2="350" y2="232" stroke={T.olive} strokeWidth="2" opacity="0.5" />
-          <circle cx="350" cy="226" r="10" fill={T.oliveFaded} stroke={T.oliveGlow} strokeWidth="0.6" />
-          <circle cx="350" cy="220" r="7" fill={T.oliveFaded} />
-        </g>
-        <ellipse cx="120" cy="258" rx="14" ry="6" fill={T.oliveFaded} style={pop(7, 250)} />
-        <ellipse cx="290" cy="258" rx="12" ry="5" fill={T.oliveFaded} style={pop(7, 300)} />
-        <g style={{ opacity: phase >= 2 && phase < 5 ? 0.35 : 0, transition: "opacity 300ms ease" }}>
-          <line x1="96" y1="270" x2="304" y2="270" stroke={T.tan} strokeWidth="0.4" />
-          <line x1="96" y1="267" x2="96" y2="273" stroke={T.tan} strokeWidth="0.4" />
-          <line x1="304" y1="267" x2="304" y2="273" stroke={T.tan} strokeWidth="0.4" />
-          <text x="200" y="280" textAnchor="middle" fontSize="8" fill={T.dim} fontFamily="'DM Mono', monospace">208'</text>
-        </g>
-      </svg>
-      <div style={{
-        display: "flex", gap: "6px", justifyContent: "center", marginTop: "16px",
-        opacity: done ? 0 : 0.6, transition: "opacity 400ms ease",
-      }}>
-        {Array.from({ length: PHASES }).map((_, i) => (
-          <div key={i} style={{
-            width: "4px", height: "4px", borderRadius: "50%",
-            background: i <= phase ? T.terra : T.tanGhost,
-            transform: i <= phase ? "scale(1)" : "scale(0.6)",
-            transition: `all ${PHASE_MS * 0.5}ms ease ${i * 30}ms`,
-          }} />
-        ))}
-      </div>
-    </div>
-  );
 }
 
 /* ─── FEATURE CARD ─── */
@@ -734,7 +587,7 @@ export default function LandingPage() {
 
           {/* Animated house */}
           <div style={{ flex: "1 1 360px", maxWidth: "480px", animation: "fadeUp 800ms ease 200ms forwards", opacity: 0 }}>
-            <HeroBuildHouse />
+            <HouseAnimation />
           </div>
         </div>
 
@@ -913,6 +766,7 @@ export default function LandingPage() {
         @keyframes fadeUp { 0% { opacity:0; transform:translateY(22px); } 100% { opacity:1; transform:translateY(0); } }
         @keyframes fadeDown { 0% { opacity:0; transform:translateY(-10px); } 100% { opacity:1; transform:translateY(0); } }
         @keyframes scrollPulse { 0%,100% { opacity:0.3; } 50% { opacity:0.6; } }
+        ${houseAnimationKeyframes}
 
         /* Desktop nav links */
         @media (min-width: 640px) { .nav-link { display: inline !important; } }
