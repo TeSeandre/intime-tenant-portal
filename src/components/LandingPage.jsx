@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import T from "../lib/theme";
 const font = "'DM Sans', 'Avenir Next', sans-serif";
 const serif = "'Playfair Display', 'Georgia', serif";
@@ -192,21 +193,23 @@ function HeroBuildHouse() {
 }
 
 /* ─── FEATURE CARD ─── */
-function FeatureCard({ icon, title, desc, delay, accent }) {
+function FeatureCard({ icon, title, desc, delay, accent, linkTo }) {
   const [ref, vis] = useReveal(0.15);
   const [hov, setHov] = useState(false);
+  const navigate = useNavigate();
   const ac = accent === "olive" ? T.olive : T.terra;
   const ag = accent === "olive" ? T.oliveGlow : T.terraGlow;
   return (
     <div ref={ref}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
+      onClick={() => linkTo && navigate(linkTo)}
       style={{
         background: T.bgCard, borderRadius: "14px", padding: "26px 20px",
         border: `1px solid ${hov ? ac + "55" : T.tanFaded}`,
         opacity: vis ? 1 : 0,
         transform: vis ? (hov ? "translateY(-3px)" : "translateY(0)") : "translateY(28px)",
         transition: `all 550ms cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
-        cursor: "default", position: "relative", overflow: "hidden",
+        cursor: linkTo ? "pointer" : "default", position: "relative", overflow: "hidden",
         flex: "1 1 260px", minWidth: "240px", maxWidth: "320px",
         boxShadow: hov ? `0 14px 44px rgba(0,0,0,0.3), 0 0 0 1px ${ag}` : "0 4px 14px rgba(0,0,0,0.12)",
       }}
@@ -327,24 +330,42 @@ function SectionHeader({ eyebrow, eyebrowColor, headline, mb = "44px" }) {
 function CTASection() {
   const [ref, vis] = useReveal(0.15);
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [emailFocused, setEmailFocused] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | error | success
+  const [status, setStatus] = useState("idle"); // idle | sending | error | success
   const [errorMsg, setErrorMsg] = useState("");
 
-  function handleSend() {
+  async function handleSend() {
     if (!email.trim()) {
       setErrorMsg("Please enter your email address.");
       setStatus("error");
       return;
     }
-    // Basic email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setErrorMsg("Please enter a valid email address.");
       setStatus("error");
       return;
     }
-    // Success — in a real app you'd POST to an API here
-    setStatus("success");
+
+    setStatus("sending");
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/send-contact-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), name: name.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErrorMsg(data.error || "Something went wrong. Please try again.");
+        setStatus("error");
+        return;
+      }
+      setStatus("success");
+    } catch {
+      setErrorMsg("Network error. Please check your connection and try again.");
+      setStatus("error");
+    }
   }
 
   return (
@@ -360,7 +381,7 @@ function CTASection() {
         Ready to call it <span style={{ color: T.terra }}>home</span>?
       </h2>
       <p style={{ fontSize: "13px", color: T.mid, lineHeight: 1.7, marginBottom: "28px" }}>
-        Drop your email — we'll send available properties and your application link.
+        Drop your email and we'll send you our available units, pricing, and a direct link to apply — usually within one business day.
       </p>
 
       {status === "success" ? (
@@ -373,21 +394,17 @@ function CTASection() {
         </div>
       ) : (
         <>
-          <div className="cta-form-row">
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxWidth: "380px", margin: "0 auto" }}>
             <div style={{
-              flex: 1, borderRadius: "10px", overflow: "hidden",
-              border: `1px solid ${status === "error" ? "#c0392b88" : emailFocused ? T.terra : T.tanGhost}`,
-              boxShadow: emailFocused ? `0 0 0 3px ${T.terraFaded}` : "none",
+              borderRadius: "10px", overflow: "hidden",
+              border: `1px solid ${T.tanGhost}`,
               transition: "all 300ms ease",
             }}>
               <input
-                type="email"
-                placeholder="you@email.com"
-                value={email}
-                onChange={e => { setEmail(e.target.value); if (status === "error") setStatus("idle"); }}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
-                onKeyDown={e => e.key === "Enter" && handleSend()}
+                type="text"
+                placeholder="Your name (optional)"
+                value={name}
+                onChange={e => setName(e.target.value)}
                 style={{
                   width: "100%", padding: "13px 14px", border: "none",
                   background: T.bgCard, color: T.tan, fontSize: "13px",
@@ -395,28 +412,55 @@ function CTASection() {
                 }}
               />
             </div>
-            <button
-              onClick={handleSend}
-              style={{
-                padding: "13px 22px", borderRadius: "10px", border: "none",
-                background: T.terra, color: "#fff", fontSize: "12px",
-                fontFamily: font, fontWeight: 500, cursor: "pointer",
-                boxShadow: `0 4px 18px ${T.terraGlow}`, transition: "transform 200ms ease",
-                whiteSpace: "nowrap",
-              }}
-              onMouseEnter={e => e.target.style.transform = "translateY(-1px)"}
-              onMouseLeave={e => e.target.style.transform = "translateY(0)"}
-            >Send</button>
+            <div className="cta-form-row">
+              <div style={{
+                flex: 1, borderRadius: "10px", overflow: "hidden",
+                border: `1px solid ${status === "error" ? "#c0392b88" : emailFocused ? T.terra : T.tanGhost}`,
+                boxShadow: emailFocused ? `0 0 0 3px ${T.terraFaded}` : "none",
+                transition: "all 300ms ease",
+              }}>
+                <input
+                  type="email"
+                  placeholder="you@email.com"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); if (status === "error") setStatus("idle"); }}
+                  onFocus={() => setEmailFocused(true)}
+                  onBlur={() => setEmailFocused(false)}
+                  onKeyDown={e => e.key === "Enter" && handleSend()}
+                  style={{
+                    width: "100%", padding: "13px 14px", border: "none",
+                    background: T.bgCard, color: T.tan, fontSize: "13px",
+                    fontFamily: font, outline: "none",
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={status === "sending"}
+                style={{
+                  padding: "13px 22px", borderRadius: "10px", border: "none",
+                  background: status === "sending" ? T.tanGhost : T.terra,
+                  color: "#fff", fontSize: "12px",
+                  fontFamily: font, fontWeight: 500,
+                  cursor: status === "sending" ? "not-allowed" : "pointer",
+                  boxShadow: status === "sending" ? "none" : `0 4px 18px ${T.terraGlow}`,
+                  transition: "all 200ms ease",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={e => { if (status !== "sending") e.target.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => e.target.style.transform = "translateY(0)"}
+              >{status === "sending" ? "Sending…" : "Send"}</button>
+            </div>
           </div>
           {status === "error" && (
-            <div style={{ fontSize: "11px", color: "#e74c3c", marginTop: "6px", textAlign: "left" }}>
+            <div style={{ fontSize: "11px", color: "#e74c3c", marginTop: "6px", textAlign: "left", maxWidth: "380px", margin: "6px auto 0" }}>
               {errorMsg}
             </div>
           )}
         </>
       )}
       <div style={{ fontSize: "9px", color: T.dim, marginTop: "10px" }}>
-        No spam. Just available units and how to apply.
+        One email with available units + application link. No spam, ever.
       </div>
     </div>
   );
@@ -425,6 +469,20 @@ function CTASection() {
 /* ─── HAMBURGER MENU ─── */
 function HamburgerMenu() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  function handleNavItem(item) {
+    setOpen(false);
+    if (item === "Contact") {
+      navigate("/about#contact");
+    } else if (item === "Tenants") {
+      navigate("/tenant/dashboard");
+    } else if (item === "Properties") {
+      navigate("/properties");
+    } else if (item === "About") {
+      navigate("/about");
+    }
+  }
 
   return (
     <>
@@ -453,7 +511,7 @@ function HamburgerMenu() {
         }}>
           {["Tenants", "Properties", "About", "Contact"].map(item => (
             <button key={item}
-              onClick={() => setOpen(false)}
+              onClick={() => handleNavItem(item)}
               style={{
                 background: "none", border: "none", cursor: "pointer",
                 textAlign: "left", padding: "12px 0",
@@ -482,6 +540,7 @@ function HamburgerMenu() {
    ═══════════════════════════ */
 export default function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const h = () => setScrollY(window.scrollY);
@@ -490,6 +549,18 @@ export default function LandingPage() {
   }, []);
 
   const navBg = Math.min(scrollY / 200, 1);
+
+  function handleDesktopNav(item) {
+    if (item === "Contact") {
+      navigate("/about#contact");
+    } else if (item === "Tenants") {
+      navigate("/tenant/dashboard");
+    } else if (item === "Properties") {
+      navigate("/properties");
+    } else if (item === "About") {
+      navigate("/about");
+    }
+  }
 
   return (
     <div style={{ background: T.bg, fontFamily: font, color: T.tan, overflowX: "hidden" }}>
@@ -515,14 +586,16 @@ export default function LandingPage() {
         </div>
         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
           {["Tenants", "Properties", "About", "Contact"].map((item) => (
-            <a key={item} href="#" className="nav-link" style={{
+            <button key={item} onClick={() => handleDesktopNav(item)} className="nav-link" style={{
               fontSize: "11px", color: T.mid, textDecoration: "none",
               letterSpacing: "1px", textTransform: "uppercase",
               transition: "color 200ms ease", display: "none",
+              background: "none", border: "none", cursor: "pointer",
+              fontFamily: font, padding: 0,
             }}
-              onMouseEnter={e => e.target.style.color = T.tan}
-              onMouseLeave={e => e.target.style.color = T.mid}
-            >{item}</a>
+              onMouseEnter={e => e.currentTarget.style.color = T.tan}
+              onMouseLeave={e => e.currentTarget.style.color = T.mid}
+            >{item}</button>
           ))}
           <HamburgerMenu />
           <a href="/login" style={{
@@ -624,6 +697,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── VISITOR SPLIT ─── */}
+      <section style={{
+        padding: "28px 24px", display: "flex", justifyContent: "center",
+        background: T.bgAlt, borderBottom: `1px solid ${T.tanFaded}`,
+      }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
+          <span style={{ fontSize: "11px", color: T.dim, letterSpacing: "1px", textTransform: "uppercase" }}>I am a</span>
+          <button
+            onClick={() => scrollTo("features")}
+            style={{
+              padding: "9px 22px", borderRadius: "8px", border: `1px solid ${T.terra}`,
+              background: T.terraFaded, color: T.terra, fontSize: "11px",
+              fontFamily: font, fontWeight: 500, letterSpacing: "1px",
+              textTransform: "uppercase", cursor: "pointer", transition: "all 200ms ease",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.terra; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.terraFaded; e.currentTarget.style.color = T.terra; }}
+          >Prospective Tenant</button>
+          <span style={{ fontSize: "11px", color: T.dim }}>or</span>
+          <a href="/login" style={{
+            display: "inline-block", padding: "9px 22px", borderRadius: "8px",
+            border: `1px solid ${T.olive}`, background: T.oliveFaded,
+            color: T.olive, fontSize: "11px", fontFamily: font, fontWeight: 500,
+            letterSpacing: "1px", textTransform: "uppercase", textDecoration: "none",
+            transition: "all 200ms ease",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.olive; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.oliveFaded; e.currentTarget.style.color = T.olive; }}
+          >Current Tenant</a>
+        </div>
+      </section>
+
       {/* ─── STATS ─── */}
       <section style={{ padding: "36px 24px", display: "flex", justifyContent: "center", gap: "1px", background: T.tanFaded, flexWrap: "wrap" }}>
         {[
@@ -644,11 +749,11 @@ export default function LandingPage() {
           mb="44px"
         />
         <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>
-          <FeatureCard icon="💳" title="One-Tap Rent" accent="terra" delay={0}
+          <FeatureCard icon="💳" title="One-Tap Rent" accent="terra" delay={0} linkTo="/login"
             desc="Pay rent in seconds. Zelle today, Stripe ACH tomorrow. Set autopay and never think about it again." />
-          <FeatureCard icon="📝" title="Digital Leases" accent="olive" delay={80}
+          <FeatureCard icon="📝" title="Digital Leases" accent="olive" delay={80} linkTo="/login"
             desc="Sign your lease from your phone. No printers, no scanning, no driving across town." />
-          <FeatureCard icon="🔧" title="Instant Maintenance" accent="terra" delay={160}
+          <FeatureCard icon="🔧" title="Instant Maintenance" accent="terra" delay={160} linkTo="/login"
             desc="Submit a request, track it live, get notified when it's done. No phone tag." />
           <FeatureCard icon="🏠" title="Your Home Hub" accent="olive" delay={240}
             desc="Lease details, payment history, documents — one login, zero confusion." />
@@ -692,6 +797,41 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── CONTACT INFO ─── */}
+      <section id="contact" style={{ padding: "60px 24px", background: T.bgAlt, borderTop: `1px solid ${T.tanFaded}` }}>
+        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+          <SectionHeader
+            eyebrow="Contact Us"
+            eyebrowColor={T.olive}
+            headline={`Reach us <span style="color:${T.terra}">anytime</span>.`}
+            mb="36px"
+          />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>
+            {[
+              { icon: "✉️", label: "Email", value: "intimer.e@gmail.com", href: "mailto:intimer.e@gmail.com" },
+              { icon: "📍", label: "Location", value: "Wichita, KS", href: null },
+            ].map(({ icon, label, value, href }) => (
+              <div key={label} style={{
+                background: T.bgCard, borderRadius: "14px", padding: "22px 28px",
+                border: `1px solid ${T.tanFaded}`, textAlign: "center",
+                flex: "1 1 180px", minWidth: "160px", maxWidth: "220px",
+              }}>
+                <div style={{ fontSize: "22px", marginBottom: "8px" }}>{icon}</div>
+                <div style={{ fontSize: "9px", letterSpacing: "2px", color: T.dim, textTransform: "uppercase", marginBottom: "6px" }}>{label}</div>
+                {href ? (
+                  <a href={href} style={{ fontSize: "13px", color: T.tan, textDecoration: "none", transition: "color 200ms ease" }}
+                    onMouseEnter={e => e.target.style.color = T.terra}
+                    onMouseLeave={e => e.target.style.color = T.tan}
+                  >{value}</a>
+                ) : (
+                  <div style={{ fontSize: "13px", color: T.tan }}>{value}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── CTA ─── */}
       <section id="cta" style={{ padding: "60px 24px", background: `linear-gradient(180deg, ${T.bg}, ${T.bgAlt})`, borderTop: `1px solid ${T.tanFaded}` }}>
         <CTASection />
@@ -710,14 +850,18 @@ export default function LandingPage() {
         </div>
         <div style={{ fontSize: "9px", color: T.dim, letterSpacing: "1px" }}>An Omnivation Company — Wichita, KS</div>
         <div style={{ display: "flex", gap: "20px" }}>
-          {["Privacy", "Terms", "Contact"].map(l => (
-            <a key={l} href="#" style={{
+          {[
+            { label: "Privacy", href: "/privacy" },
+            { label: "Terms", href: "/terms" },
+            { label: "Contact", href: "mailto:intimer.e@gmail.com" },
+          ].map(({ label, href }) => (
+            <a key={label} href={href} style={{
               fontSize: "9px", color: T.dim, textDecoration: "none",
               letterSpacing: "1px", textTransform: "uppercase", transition: "color 200ms ease",
             }}
               onMouseEnter={e => e.target.style.color = T.tan}
               onMouseLeave={e => e.target.style.color = T.dim}
-            >{l}</a>
+            >{label}</a>
           ))}
         </div>
         <div style={{ fontSize: "8px", color: T.dim }}>© 2026 In Time Realty. All rights reserved.</div>

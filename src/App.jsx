@@ -24,6 +24,10 @@ import LoginPage from './components/shared/LoginPage'
 import UIShowcase from './components/UIShowcase'
 import HouseLoading from './components/HouseLoading'
 import LandingPage from './components/LandingPage'
+import AboutContactPage from './components/AboutContactPage'
+import PropertiesPage from './components/PropertiesPage'
+import PrivacyPage from './components/PrivacyPage'
+import TermsPage from './components/TermsPage'
 
 function RequireTenant({ children }) {
   const { loading, session, profile } = useAuth()
@@ -74,6 +78,10 @@ export default function App() {
 
         {/* Public landing */}
         <Route path='/home' element={<LandingPage />} />
+        <Route path='/about' element={<AboutContactPage />} />
+        <Route path='/properties' element={<PropertiesPage />} />
+        <Route path='/privacy' element={<PrivacyPage />} />
+        <Route path='/terms' element={<TermsPage />} />
 
         {/* Design previews */}
         <Route path='/showcase' element={<UIShowcase />} />
