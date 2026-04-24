@@ -12,6 +12,7 @@ const tenantLinks = [
   { to: '/tenant/maintenance', label: 'Maintenance' },
   { to: '/tenant/inbox', label: 'Inbox' },
   { to: '/tenant/profile', label: 'Profile' },
+  { to: '/tenant/review', label: 'Review' },
 ]
 
 const adminLinks = [

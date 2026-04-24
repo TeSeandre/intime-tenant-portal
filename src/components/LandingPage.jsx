@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import T from "../lib/theme";
+import { supabase } from "../lib/supabase";
 const font = "'DM Sans', 'Avenir Next', sans-serif";
 const serif = "'Playfair Display', 'Georgia', serif";
 
@@ -324,6 +325,57 @@ function SectionHeader({ eyebrow, eyebrowColor, headline, mb = "44px" }) {
       />
     </div>
   );
+}
+
+/* ─── TESTIMONIALS SECTION ─── */
+const FALLBACK_REVIEWS = [
+  { id: 'f1', quote: "I used to mail checks to my old landlord. Now I pay from my couch in 10 seconds. Didn't know renting could feel this easy.", display_name: "Marcus T.", unit_label: "Derby Duplex", rating: 5 },
+  { id: 'f2', quote: "Kitchen sink backed up at 9 PM. Submitted a request, had a plumber scheduled by morning. That has never happened before.", display_name: "Jasmine R.", unit_label: "Unit 8110", rating: 5 },
+]
+
+function TestimonialsSection() {
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('reviews')
+      .select('id, quote, display_name, unit_label, rating')
+      .eq('approved', true)
+      .order('created_at', { ascending: false })
+      .limit(6)
+      .then(({ data }) => {
+        setReviews(data && data.length > 0 ? data : FALLBACK_REVIEWS)
+        setLoading(false)
+      })
+      .catch(() => {
+        setReviews(FALLBACK_REVIEWS)
+        setLoading(false)
+      })
+  }, [])
+
+  const display = loading ? FALLBACK_REVIEWS : reviews
+
+  return (
+    <section style={{ padding: "70px 24px", maxWidth: "900px", margin: "0 auto" }}>
+      <SectionHeader
+        eyebrow="Our Tenants"
+        headline={`What it's like to rent <span style="color:${T.olive}">with us</span>.`}
+        mb="36px"
+      />
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>
+        {display.map((r, i) => (
+          <Testimonial
+            key={r.id}
+            delay={i * 120}
+            quote={r.quote}
+            name={r.display_name}
+            unit={r.unit_label ? `Tenant — ${r.unit_label}` : 'Verified Tenant'}
+          />
+        ))}
+      </div>
+    </section>
+  )
 }
 
 /* ─── CTA SECTION ─── */
@@ -781,21 +833,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── TESTIMONIALS ─── */}
-      <section style={{ padding: "70px 24px", maxWidth: "900px", margin: "0 auto" }}>
-        <SectionHeader
-          eyebrow="Our Tenants"
-          headline={`What it's like to rent <span style="color:${T.olive}">with us</span>.`}
-          mb="36px"
-        />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>
-          <Testimonial delay={0}
-            quote="I used to mail checks to my old landlord. Now I pay from my couch in 10 seconds. Didn't know renting could feel this easy."
-            name="Marcus T." unit="Tenant — Derby Duplex" />
-          <Testimonial delay={120}
-            quote="Kitchen sink backed up at 9 PM. Submitted a request, had a plumber scheduled by morning. That has never happened before."
-            name="Jasmine R." unit="Tenant — Unit 8110" />
-        </div>
-      </section>
+      <TestimonialsSection />
 
       {/* ─── CONTACT INFO ─── */}
       <section id="contact" style={{ padding: "60px 24px", background: T.bgAlt, borderTop: `1px solid ${T.tanFaded}` }}>

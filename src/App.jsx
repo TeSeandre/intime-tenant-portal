@@ -10,6 +10,7 @@ import LeaseViewer from './components/tenant/LeaseViewer'
 import MaintenanceForm from './components/tenant/MaintenanceForm'
 import Inbox from './components/tenant/Inbox'
 import Profile from './components/tenant/Profile'
+import ReviewForm from './components/tenant/ReviewForm'
 
 // Admin pages
 import AdminDashboard from './components/admin/AdminDashboard'
@@ -67,6 +68,7 @@ export default function App() {
         <Route path='/tenant/maintenance' element={<RequireTenant><MaintenanceForm /></RequireTenant>} />
         <Route path='/tenant/inbox' element={<RequireTenant><Inbox /></RequireTenant>} />
         <Route path='/tenant/profile' element={<RequireTenant><Profile /></RequireTenant>} />
+        <Route path='/tenant/review' element={<RequireTenant><ReviewForm /></RequireTenant>} />
 
         {/* Admin routes */}
         <Route path='/admin/dashboard' element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
