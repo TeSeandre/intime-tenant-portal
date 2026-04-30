@@ -429,12 +429,12 @@ function HamburgerMenu() {
               style={{
                 background: "none", border: "none", cursor: "pointer",
                 textAlign: "left", padding: "12px 0",
-                fontSize: "13px", color: T.mid, letterSpacing: "1px",
-                textTransform: "uppercase", borderBottom: `1px solid ${T.tanFaded}`,
+                fontSize: "13px", color: "rgba(196,168,130,0.85)", letterSpacing: "1px",
+                textTransform: "uppercase", borderBottom: "1px solid rgba(196,168,130,0.10)",
                 fontFamily: font, transition: "color 200ms ease",
               }}
-              onMouseEnter={e => e.currentTarget.style.color = T.tan}
-              onMouseLeave={e => e.currentTarget.style.color = T.mid}
+              onMouseEnter={e => e.currentTarget.style.color = T.terra}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(196,168,130,0.85)"}
             >{item}</button>
           ))}
           <a href="/login" onClick={() => setOpen(false)} style={{
