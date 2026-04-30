@@ -254,21 +254,14 @@ function CTASection() {
 
     setStatus("sending");
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const res = await fetch(`${supabaseUrl}/functions/v1/send-contact-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), name: name.trim() }),
+      const { error } = await supabase.from("contact_inquiries").insert({
+        email: email.trim(),
+        name: name.trim() || null,
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setErrorMsg(data.error || "Something went wrong. Please try again.");
-        setStatus("error");
-        return;
-      }
+      if (error) throw error;
       setStatus("success");
     } catch {
-      setErrorMsg("Network error. Please check your connection and try again.");
+      setErrorMsg("Something went wrong. Please try again or email us directly.");
       setStatus("error");
     }
   }
@@ -375,13 +368,29 @@ function CTASection() {
 function HamburgerMenu() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [open]);
 
   function handleNavItem(item) {
     setOpen(false);
     if (item === "Contact") {
-      navigate("/about#contact");
+      scrollTo("contact");
     } else if (item === "Tenants") {
-      navigate("/tenant/dashboard");
+      navigate("/login");
     } else if (item === "Properties") {
       navigate("/properties");
     } else if (item === "About") {
@@ -390,7 +399,7 @@ function HamburgerMenu() {
   }
 
   return (
-    <>
+    <div ref={menuRef} style={{ position: "relative" }}>
       <button
         className="hamburger-btn"
         onClick={() => setOpen(o => !o)}
@@ -436,7 +445,7 @@ function HamburgerMenu() {
           }}>Tenant Login</a>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -660,11 +669,11 @@ export default function LandingPage() {
             desc="Sign your lease from your phone. No printers, no scanning, no driving across town." />
           <FeatureCard icon="🔧" title="Instant Maintenance" accent="terra" delay={160} linkTo="/login"
             desc="Submit a request, track it live, get notified when it's done. No phone tag." />
-          <FeatureCard icon="🏠" title="Your Home Hub" accent="olive" delay={240}
+          <FeatureCard icon="🏠" title="Your Home Hub" accent="olive" delay={240} linkTo="/login"
             desc="Lease details, payment history, documents — one login, zero confusion." />
-          <FeatureCard icon="📊" title="Full History" accent="terra" delay={320}
+          <FeatureCard icon="📊" title="Full History" accent="terra" delay={320} linkTo="/login"
             desc="Every receipt, every payment, exportable for tax season. Total transparency." />
-          <FeatureCard icon="🔒" title="Bank-Level Security" accent="olive" delay={400}
+          <FeatureCard icon="🔒" title="Bank-Level Security" accent="olive" delay={400} linkTo="/login"
             desc="256-bit encryption. Your data stays yours — we never sell, never share." />
         </div>
       </section>
