@@ -1,21 +1,10 @@
-/**
- * Payment abstraction layer — v1 is Zelle (manual confirmation).
- * When migrating to Stripe ACH, replace the stubs below without
- * touching call-sites in components.
- */
-
 import { supabase } from './supabase'
 
-/**
- * Tenant submits a payment notification.
- * Creates a pending payment record; an admin must confirm it separately.
- *
- * @param {{ tenantId: string, amount: number, dueDate: string, referenceNote: string }} opts
- * @returns {Promise<{ data, error }>}
- */
-export async function submitZellePayment({ tenantId, amount, dueDate, referenceNote }) {
+export async function submitZellePayment({ amount, dueDate, referenceNote }) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   return supabase.from('payments').insert({
-    tenant_id: tenantId,
+    tenant_id: user.id,
     amount,
     due_date: dueDate,
     method: 'zelle',
@@ -24,41 +13,33 @@ export async function submitZellePayment({ tenantId, amount, dueDate, referenceN
   })
 }
 
-/**
- * Admin confirms a pending payment.
- *
- * @param {string} paymentId
- * @param {string} adminId
- * @returns {Promise<{ data, error }>}
- */
-export async function confirmPayment(paymentId, adminId) {
+export async function confirmPayment(paymentId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   return supabase
     .from('payments')
     .update({
       status: 'confirmed',
       paid_date: new Date().toISOString().slice(0, 10),
-      confirmed_by: adminId,
+      confirmed_by: user.id,
       updated_at: new Date().toISOString(),
     })
     .eq('id', paymentId)
+    .eq('status', 'pending')
 }
 
-/**
- * Admin rejects a pending payment.
- *
- * @param {string} paymentId
- * @param {string} adminId
- * @returns {Promise<{ data, error }>}
- */
-export async function rejectPayment(paymentId, adminId) {
+export async function rejectPayment(paymentId) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   return supabase
     .from('payments')
     .update({
       status: 'rejected',
-      confirmed_by: adminId,
+      confirmed_by: user.id,
       updated_at: new Date().toISOString(),
     })
     .eq('id', paymentId)
+    .eq('status', 'pending')
 }
 
 // ─── Future Stripe ACH stub ──────────────────────────────────────────────────

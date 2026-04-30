@@ -173,9 +173,9 @@ function SectionHeader({ eyebrow, eyebrowColor, headline, mb = "44px" }) {
       <div style={{ fontSize: "10px", letterSpacing: "4px", color: eyebrowColor || T.terra, textTransform: "uppercase", marginBottom: "10px" }}>
         {eyebrow}
       </div>
-      <h2 style={{ fontSize: "clamp(22px,3.5vw,34px)", fontFamily: serif, fontWeight: 400, margin: 0 }}
-        dangerouslySetInnerHTML={{ __html: headline }}
-      />
+      <h2 style={{ fontSize: "clamp(22px,3.5vw,34px)", fontFamily: serif, fontWeight: 400, margin: 0 }}>
+        {headline}
+      </h2>
     </div>
   );
 }
@@ -213,7 +213,7 @@ function TestimonialsSection() {
     <section style={{ padding: "70px 24px", maxWidth: "900px", margin: "0 auto" }}>
       <SectionHeader
         eyebrow="Our Tenants"
-        headline={`What it's like to rent <span style="color:${T.olive}">with us</span>.`}
+        headline={<>What it's like to rent <span style={{color:T.olive}}>with us</span>.</>}
         mb="36px"
       />
       <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>
@@ -659,7 +659,7 @@ export default function LandingPage() {
       <section id="features" style={{ padding: "70px 24px", maxWidth: "960px", margin: "0 auto" }}>
         <SectionHeader
           eyebrow="Why In Time"
-          headline={`Everything your landlord<br/><span style="color:rgba(196,168,130,0.55)">should</span> already offer.`}
+          headline={<>Everything your landlord<br/><span style={{color:"rgba(196,168,130,0.55)"}}>should</span> already offer.</>}
           mb="44px"
         />
         <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>
@@ -683,7 +683,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: "500px", margin: "0 auto" }}>
           <SectionHeader
             eyebrow="Getting Started" eyebrowColor={T.olive}
-            headline={`Move in, in <span style="color:${T.terra}">three steps</span>.`}
+            headline={<>Move in, in <span style={{color:T.terra}}>three steps</span>.</>}
             mb="36px"
           />
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -703,7 +703,7 @@ export default function LandingPage() {
           <SectionHeader
             eyebrow="Contact Us"
             eyebrowColor={T.olive}
-            headline={`Reach us <span style="color:${T.terra}">anytime</span>.`}
+            headline={<>Reach us <span style={{color:T.terra}}>anytime</span>.</>}
             mb="36px"
           />
           <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", justifyContent: "center" }}>

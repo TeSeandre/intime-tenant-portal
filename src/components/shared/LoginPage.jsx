@@ -97,8 +97,8 @@ export default function LoginPage() {
   }
 
   async function handleSetPassword() {
-    if (!newPassword || newPassword.length < 6) {
-      setError('Password must be at least 6 characters.')
+    if (!newPassword || newPassword.length < 12) {
+      setError('Password must be at least 12 characters.')
       return
     }
     setError(null)
@@ -125,7 +125,7 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password',
+        redirectTo: (import.meta.env.VITE_APP_URL ?? window.location.origin) + '/reset-password',
       })
       if (resetErr) throw resetErr
       setResetSent(true)

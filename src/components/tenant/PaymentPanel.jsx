@@ -31,11 +31,14 @@ export default function PaymentPanel() {
       setError('Enter a valid payment amount.')
       return
     }
+    if (Number(amount) > 50000) {
+      setError('Amount exceeds maximum. Contact your property manager for large payments.')
+      return
+    }
     setError(null)
     setBtnState('processing')
     try {
       const { error: payErr } = await submitZellePayment({
-        tenantId: user.id,
         amount: Number(amount),
         dueDate: dueDate || null,
         referenceNote: referenceNote.trim() || null,

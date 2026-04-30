@@ -5,31 +5,31 @@ export function useAuth() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [profileError, setProfileError] = useState(null)
 
   useEffect(() => {
-    // Set up auth state listener first
+    let cancelled = false
+
     const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (cancelled) return
       setSession(s)
       if (s) {
-        fetchProfile(s.user.id)
+        fetchProfile(s.user.id, () => cancelled)
       } else {
         setProfile(null)
+        setProfileError(null)
         setLoading(false)
       }
     })
 
-    // Then get the initial session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
-      if (!s) {
-        setLoading(false)
-      }
-      // If session exists, onAuthStateChange will handle it
+      if (!s && !cancelled) setLoading(false)
     })
 
-    return () => listener.subscription.unsubscribe()
+    return () => { cancelled = true; listener.subscription.unsubscribe() }
   }, [])
 
-  async function fetchProfile(userId) {
+  async function fetchProfile(userId, isCancelled) {
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -37,12 +37,16 @@ export function useAuth() {
         .select('*')
         .eq('id', userId)
         .single()
+      if (isCancelled()) return
       if (error) throw error
       setProfile(data)
-    } catch {
+      setProfileError(null)
+    } catch (err) {
+      if (isCancelled()) return
       setProfile(null)
+      setProfileError(err.message)
     } finally {
-      setLoading(false)
+      if (!isCancelled()) setLoading(false)
     }
   }
 
@@ -64,6 +68,7 @@ export function useAuth() {
     isAdmin: profile?.role === 'admin',
     isTenant: profile?.role === 'tenant',
     loading,
+    profileError,
     signIn,
     signOut,
   }

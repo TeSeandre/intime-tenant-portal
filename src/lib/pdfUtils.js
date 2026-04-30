@@ -12,6 +12,10 @@ import { supabase } from './supabase'
  * @returns {Promise<Uint8Array>} Signed PDF bytes
  */
 export async function embedSignature(pdfUrl, sigDataUrl, tenantName, signedAt) {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  if (!supabaseUrl || !pdfUrl.startsWith(supabaseUrl)) {
+    throw new Error('Invalid lease document URL')
+  }
   const response = await fetch(pdfUrl)
   const existingPdfBytes = await response.arrayBuffer()
 

@@ -49,7 +49,7 @@ export default function PaymentConfirm() {
   async function handleConfirm(paymentId) {
     setProcessing(paymentId)
     try {
-      const { error } = await confirmPayment(paymentId, user.id)
+      const { error } = await confirmPayment(paymentId)
       if (error) throw error
       await load()
     } catch {
@@ -62,7 +62,7 @@ export default function PaymentConfirm() {
   async function handleReject(paymentId) {
     setProcessing(paymentId)
     try {
-      const { error } = await rejectPayment(paymentId, user.id)
+      const { error } = await rejectPayment(paymentId)
       if (error) throw error
       await load()
     } catch {

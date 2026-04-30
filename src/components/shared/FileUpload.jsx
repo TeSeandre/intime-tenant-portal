@@ -18,9 +18,16 @@ export default function FileUpload({ bucket = 'documents', pathPrefix = 'uploads
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
 
+  const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+  const MAX_SIZE = 5 * 1024 * 1024
+
   async function uploadFiles(files) {
     if (!files || files.length === 0) return
     setError(null)
+    for (const file of Array.from(files)) {
+      if (!ALLOWED_TYPES.has(file.type)) { setError('Only JPEG, PNG, WebP, and GIF images are allowed.'); return }
+      if (file.size > MAX_SIZE) { setError('Each file must be under 5 MB.'); return }
+    }
     setUploading(true)
     try {
       const urls = []

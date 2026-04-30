@@ -31,19 +31,19 @@ import PrivacyPage from './components/PrivacyPage'
 import TermsPage from './components/TermsPage'
 
 function RequireTenant({ children }) {
-  const { loading, session, profile } = useAuth()
+  const { loading, session, profile, profileError } = useAuth()
   if (loading) return <HouseSpinner />
   if (!session) return <Navigate to='/login' replace />
-  if (!profile) return <HouseSpinner />
+  if (profileError || !profile) return <Navigate to='/login' replace />
   if (profile.role !== 'tenant') return <Navigate to='/admin/dashboard' replace />
   return children
 }
 
 function RequireAdmin({ children }) {
-  const { loading, session, profile } = useAuth()
+  const { loading, session, profile, profileError } = useAuth()
   if (loading) return <HouseSpinner />
   if (!session) return <Navigate to='/login' replace />
-  if (!profile) return <HouseSpinner />
+  if (profileError || !profile) return <Navigate to='/login' replace />
   if (profile.role !== 'admin') return <Navigate to='/tenant/dashboard' replace />
   return children
 }
@@ -85,9 +85,11 @@ export default function App() {
         <Route path='/privacy' element={<PrivacyPage />} />
         <Route path='/terms' element={<TermsPage />} />
 
-        {/* Design previews */}
-        <Route path='/showcase' element={<UIShowcase />} />
-        <Route path='/loading' element={<HouseLoading />} />
+        {/* Design previews — dev only */}
+        {import.meta.env.VITE_APP_ENV === 'development' && <>
+          <Route path='/showcase' element={<UIShowcase />} />
+          <Route path='/loading' element={<HouseLoading />} />
+        </>}
 
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
