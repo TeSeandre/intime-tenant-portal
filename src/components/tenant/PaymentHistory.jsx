@@ -7,10 +7,12 @@ const font = "'DM Sans', 'Avenir', sans-serif"
 const mono = "'DM Mono', 'SF Mono', monospace"
 
 const STATUS_COLOR = {
-  pending:   { bg: 'rgba(194,112,62,0.1)',   color: T.terra,   border: 'rgba(194,112,62,0.3)' },
-  confirmed: { bg: 'rgba(107,132,85,0.12)',  color: '#6B8455', border: 'rgba(107,132,85,0.3)' },
-  rejected:  { bg: 'rgba(180,60,60,0.1)',    color: '#C05050', border: 'rgba(180,60,60,0.3)'  },
-  late:      { bg: 'rgba(194,112,62,0.15)',  color: T.terra,   border: T.terraGlow             },
+  pending:    { bg: 'rgba(194,112,62,0.1)',   color: T.terra,   border: 'rgba(194,112,62,0.3)' },
+  processing: { bg: 'rgba(100,130,200,0.1)',  color: '#7A9FC8', border: 'rgba(100,130,200,0.3)' },
+  confirmed:  { bg: 'rgba(107,132,85,0.12)',  color: '#6B8455', border: 'rgba(107,132,85,0.3)' },
+  failed:     { bg: 'rgba(180,60,60,0.1)',    color: '#C05050', border: 'rgba(180,60,60,0.3)'  },
+  rejected:   { bg: 'rgba(180,60,60,0.1)',    color: '#C05050', border: 'rgba(180,60,60,0.3)'  },
+  late:       { bg: 'rgba(194,112,62,0.15)',  color: T.terra,   border: T.terraGlow             },
 }
 
 function fmt(n) {
@@ -109,7 +111,7 @@ export default function PaymentHistory() {
                         {fmt(p.amount)}
                       </p>
                       <p style={{ fontSize: '11px', color: T.textDim, marginTop: '3px' }}>
-                        Due: {fmtDate(p.due_date)} · Paid: {fmtDate(p.paid_date)}
+                        {p.method === 'ach' ? 'ACH' : 'Zelle'} · Due: {fmtDate(p.due_date)} · Paid: {fmtDate(p.paid_date)}
                       </p>
                       {p.reference_note && (
                         <p style={{ fontSize: '11px', color: T.textMid, marginTop: '3px' }}>

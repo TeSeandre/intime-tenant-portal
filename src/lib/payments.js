@@ -42,6 +42,25 @@ export async function rejectPayment(paymentId) {
     .eq('status', 'pending')
 }
 
-// ─── Future Stripe ACH stub ──────────────────────────────────────────────────
-// export async function createStripePaymentIntent({ tenantId, amount }) { ... }
-// export async function confirmStripePayment(paymentIntentId) { ... }
+// ─── Stripe ACH ──────────────────────────────────────────────────────────────
+
+export async function createAchPaymentIntent({ amount, dueDate }) {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Not authenticated')
+
+  const res = await fetch('/api/create-payment-intent', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ amount, dueDate: dueDate || null }),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error ?? 'Failed to initialize payment')
+  }
+
+  return res.json() // { clientSecret, paymentId }
+}
