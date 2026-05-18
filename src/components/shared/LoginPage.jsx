@@ -28,7 +28,6 @@ export default function LoginPage() {
           return
         }
         if (data?.session) {
-          // A ?code= on /login always means password recovery
           setMode('recovery')
         }
         return
@@ -61,15 +60,6 @@ export default function LoginPage() {
       }
     }
 
-    async function redirectByRole(userId) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single()
-      navigate(profile?.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard')
-    }
-
     handleAuthCallback()
   }, [])
 
@@ -82,7 +72,6 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       const data = await signIn(email, password)
-      // Fetch profile directly so we can route immediately without waiting for useAuth to re-render
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
@@ -106,9 +95,13 @@ export default function LoginPage() {
     try {
       const { error: updateErr } = await supabase.auth.updateUser({ password: newPassword })
       if (updateErr) throw updateErr
-      setMode('login')
-      setError(null)
-      alert('Password set! You can now log in.')
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      navigate(profile?.role === 'admin' ? '/admin/dashboard' : '/tenant/dashboard')
     } catch (err) {
       setError(err.message ?? 'Failed to set password.')
     } finally {
@@ -118,7 +111,7 @@ export default function LoginPage() {
 
   async function handleForgotPassword() {
     if (!email) {
-      setError('Enter your email address above first.')
+      setError('Enter your email address.')
       return
     }
     setError(null)
@@ -136,9 +129,17 @@ export default function LoginPage() {
     }
   }
 
+  function switchMode(newMode) {
+    setMode(newMode)
+    setError(null)
+    setResetSent(false)
+  }
+
   function handleKeyDown(e) {
     if (e.key === 'Enter') {
-      mode === 'recovery' ? handleSetPassword() : handleLogin()
+      if (mode === 'recovery') handleSetPassword()
+      else if (mode === 'forgot') handleForgotPassword()
+      else handleLogin()
     }
   }
 
@@ -150,7 +151,7 @@ export default function LoginPage() {
             InTime<span className='text-brand-terra'>Realty</span>
           </h1>
           <p className='text-sm text-gray-500 mt-1'>
-            {mode === 'recovery' ? 'Set New Password' : 'Tenant Portal'}
+            {mode === 'recovery' ? 'Set New Password' : mode === 'forgot' ? 'Reset Password' : 'Tenant Portal'}
           </p>
         </div>
 
@@ -174,7 +175,7 @@ export default function LoginPage() {
                 onChange={e => setNewPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className='border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-terra'
-                placeholder='Min 6 characters'
+                placeholder='Min 12 characters'
               />
             </div>
             <button
@@ -183,6 +184,46 @@ export default function LoginPage() {
               className='mt-2 bg-brand-terra text-white rounded-lg py-2 text-sm font-semibold hover:bg-brand-terra-dk transition-colors disabled:opacity-50'
             >
               {submitting ? 'Saving...' : 'Set Password'}
+            </button>
+          </div>
+        ) : mode === 'forgot' ? (
+          <div className='flex flex-col gap-4'>
+            {resetSent ? (
+              <p className='text-center text-sm text-green-600'>
+                Reset email sent! Check your inbox and click the link to set a new password.
+              </p>
+            ) : (
+              <>
+                <div className='flex flex-col gap-1'>
+                  <label className='text-sm font-medium text-brand-charcoal' htmlFor='resetEmail'>
+                    Email
+                  </label>
+                  <input
+                    id='resetEmail'
+                    type='email'
+                    autoComplete='email'
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className='border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-terra'
+                    placeholder='you@example.com'
+                  />
+                </div>
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={submitting}
+                  className='mt-2 bg-brand-terra text-white rounded-lg py-2 text-sm font-semibold hover:bg-brand-terra-dk transition-colors disabled:opacity-50'
+                >
+                  {submitting ? 'Sending...' : 'Send Reset Link'}
+                </button>
+              </>
+            )}
+            <button
+              type='button'
+              onClick={() => switchMode('login')}
+              className='text-center text-xs text-gray-400 hover:text-brand-terra transition-colors underline underline-offset-2'
+            >
+              Back to login
             </button>
           </div>
         ) : (
@@ -227,18 +268,14 @@ export default function LoginPage() {
               {submitting ? 'Signing in...' : 'Sign In'}
             </button>
 
-            {resetSent ? (
-              <p className='text-center text-xs text-green-600'>Reset email sent! Check your inbox.</p>
-            ) : (
-              <button
-                type='button'
-                onClick={handleForgotPassword}
-                disabled={submitting}
-                className='text-center text-xs text-gray-400 hover:text-brand-terra transition-colors underline underline-offset-2 disabled:opacity-50'
-              >
-                Forgot password?
-              </button>
-            )}
+            <button
+              type='button'
+              onClick={() => switchMode('forgot')}
+              disabled={submitting}
+              className='text-center text-xs text-gray-400 hover:text-brand-terra transition-colors underline underline-offset-2 disabled:opacity-50'
+            >
+              Forgot password?
+            </button>
           </div>
         )}
 
