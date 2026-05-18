@@ -25,6 +25,7 @@ const THEMES = {
     mid30Ghost: "rgba(196,168,130,0.25)",
 
     terra: "#C2703E",
+    terraHover: "#D4813A",
     terraGlow: "rgba(194,112,62,0.25)",
     terraFaded: "rgba(194,112,62,0.08)",
     accent10: "#C2703E",
@@ -61,6 +62,7 @@ const THEMES = {
     mid30Ghost: "rgba(107,132,85,0.25)",
 
     terra: "#D4B896",
+    terraHover: "#E2C8AA",
     terraGlow: "rgba(212,184,150,0.25)",
     terraFaded: "rgba(212,184,150,0.08)",
     accent10: "#D4B896",
@@ -97,6 +99,7 @@ const THEMES = {
     mid30Ghost: "rgba(184,90,58,0.2)",
 
     terra: "#556B44",
+    terraHover: "#647D52",
     terraGlow: "rgba(85,107,68,0.22)",
     terraFaded: "rgba(85,107,68,0.08)",
     accent10: "#556B44",

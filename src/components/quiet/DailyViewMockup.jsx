@@ -12,6 +12,7 @@ const MESSAGES = [
     urgency: 'emergency',
     tag: '🔥 Emergency',
     tagColor: T.terra,
+    draft: "Hi Marcus, on it right now. Can you send a quick photo? I'm calling a plumber immediately.",
   },
   {
     id: 2,
@@ -21,13 +22,13 @@ const MESSAGES = [
     time: '7:52 AM',
     urgency: 'urgent',
     tag: '⚡ Urgent',
-    tagColor: '#D4913A',
+    tagColor: T.terraHover,
   },
   {
     id: 3,
     unit: 'Unit 3C',
     tenant: 'Jordan L.',
-    text: 'bathroom faucet is dripping [Ticket #127 created ✓]',
+    text: 'dripping faucet in bathroom [Ticket #127 created ✓]',
     time: 'Yesterday',
     urgency: 'normal',
     tag: '📋 Ticket open',
@@ -37,7 +38,7 @@ const MESSAGES = [
     id: 4,
     unit: 'Unit 2A',
     tenant: 'Priya S.',
-    text: 'hey when is rent due this month? i thought it was the 1st',
+    text: 'hey when is rent due this month? thought it was the 1st',
     time: 'Yesterday',
     urgency: 'normal',
     tag: '💬 Rent',
@@ -55,81 +56,139 @@ const MESSAGES = [
   },
 ]
 
-function MessageRow({ msg, compact }) {
+function initials(name) {
+  return name.split(' ').map(n => n[0]).join('')
+}
+
+function MessageRow({ msg, compact, showDraft }) {
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: compact ? 8 : 12,
-        padding: compact ? '8px 10px' : '10px 14px',
         borderRadius: 8,
         background: T.bgHover,
         marginBottom: compact ? 4 : 6,
+        overflow: 'hidden',
       }}
     >
       <div
         style={{
-          width: compact ? 28 : 32,
-          height: compact ? 28 : 32,
-          borderRadius: '50%',
-          background: T.bgCard,
-          border: `1px solid rgba(196,168,130,0.15)`,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: compact ? 10 : 12,
-          color: T.textMid,
-          flexShrink: 0,
-          fontWeight: 600,
+          alignItems: 'flex-start',
+          gap: compact ? 8 : 12,
+          padding: compact ? '8px 10px' : '10px 14px',
         }}
       >
-        {msg.tenant.split(' ').map(n => n[0]).join('')}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: compact ? 10 : 12, fontWeight: 600, color: T.tan }}>{msg.tenant}</span>
-          <span
-            style={{
-              fontSize: compact ? 9 : 10,
-              background: T.bgCard,
-              color: T.textDim,
-              padding: '1px 6px',
-              borderRadius: 4,
-              border: `1px solid rgba(196,168,130,0.1)`,
-            }}
-          >
-            {msg.unit}
-          </span>
-        </div>
         <div
           style={{
+            width: compact ? 28 : 32,
+            height: compact ? 28 : 32,
+            borderRadius: '50%',
+            background: T.bgCard,
+            border: `1px solid rgba(196,168,130,0.15)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             fontSize: compact ? 10 : 12,
             color: T.textMid,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            maxWidth: compact ? 160 : '100%',
+            flexShrink: 0,
+            fontWeight: 600,
           }}
         >
-          {msg.text}
+          {initials(msg.tenant)}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: compact ? 10 : 12, fontWeight: 600, color: T.tan }}>{msg.tenant}</span>
+            <span
+              style={{
+                fontSize: compact ? 9 : 10,
+                background: T.bgCard,
+                color: T.textDim,
+                padding: '1px 6px',
+                borderRadius: 4,
+                border: `1px solid rgba(196,168,130,0.1)`,
+              }}
+            >
+              {msg.unit}
+            </span>
+          </div>
+          <div
+            style={{
+              fontSize: compact ? 10 : 12,
+              color: T.textMid,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: compact ? 160 : '100%',
+            }}
+          >
+            {msg.text}
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+          <span style={{ fontSize: compact ? 9 : 10, color: T.textDim }}>{msg.time}</span>
+          <span
+            style={{
+              fontSize: compact ? 8 : 10,
+              color: msg.tagColor,
+              background: `${msg.tagColor}18`,
+              padding: compact ? '1px 5px' : '2px 7px',
+              borderRadius: 4,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {msg.tag}
+          </span>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-        <span style={{ fontSize: compact ? 9 : 10, color: T.textDim }}>{msg.time}</span>
-        <span
+
+      {showDraft && msg.draft && (
+        <div
           style={{
-            fontSize: compact ? 8 : 10,
-            color: msg.tagColor,
-            background: `${msg.tagColor}18`,
-            padding: compact ? '1px 5px' : '2px 7px',
-            borderRadius: 4,
-            whiteSpace: 'nowrap',
+            margin: '0 10px 10px',
+            background: T.bgCard,
+            border: `1px solid rgba(196,168,130,0.15)`,
+            borderRadius: 6,
+            padding: '10px 12px',
           }}
         >
-          {msg.tag}
-        </span>
-      </div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: T.olive, marginBottom: 6, letterSpacing: '0.5px' }}>
+            AI DRAFT
+          </div>
+          <div style={{ fontSize: 12, color: T.textMid, lineHeight: 1.5, marginBottom: 10, fontStyle: 'italic' }}>
+            "{msg.draft}"
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              style={{
+                fontSize: 11,
+                padding: '4px 10px',
+                borderRadius: 5,
+                border: `1px solid rgba(196,168,130,0.2)`,
+                background: T.bgHover,
+                color: T.textMid,
+                cursor: 'default',
+              }}
+            >
+              Edit
+            </button>
+            <button
+              style={{
+                fontSize: 11,
+                padding: '4px 10px',
+                borderRadius: 5,
+                border: 'none',
+                background: T.olive,
+                color: '#F0F5EC',
+                fontWeight: 700,
+                cursor: 'default',
+              }}
+            >
+              ✓ Approve & Send
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -165,20 +224,14 @@ function SectionHeader({ emoji, label, count, color, compact }) {
   )
 }
 
-export default function DailyViewMockup({ preview = false }) {
-  const compact = preview
-
+export default function DailyViewMockup({ preview: compact = false }) {
   const emergency = MESSAGES.filter(m => m.urgency === 'emergency' || m.urgency === 'urgent')
   const inbox = MESSAGES.filter(m => m.urgency === 'normal')
   const quiet = MESSAGES.filter(m => m.urgency === 'low')
 
-  const previewEmergency = emergency.slice(0, 1)
-  const previewInbox = inbox.slice(0, 1)
-  const previewQuiet = quiet.slice(0, 1)
-
-  const showEmergency = compact ? previewEmergency : emergency
-  const showInbox = compact ? previewInbox : inbox
-  const showQuiet = compact ? previewQuiet : quiet
+  const showEmergency = compact ? emergency.slice(0, 1) : emergency
+  const showInbox = compact ? inbox.slice(0, 1) : inbox
+  const showQuiet = compact ? quiet.slice(0, 1) : quiet
 
   return (
     <div
@@ -194,7 +247,6 @@ export default function DailyViewMockup({ preview = false }) {
         fontFamily: "'Inter', 'Geist', system-ui, sans-serif",
       }}
     >
-      {/* Top bar */}
       <div
         style={{
           display: 'flex',
@@ -212,49 +264,47 @@ export default function DailyViewMockup({ preview = false }) {
         </div>
       </div>
 
-      {/* Emergency section */}
       {showEmergency.length > 0 && (
         <>
           <SectionHeader
             emoji="🔥"
             label="Needs you now"
-            count={compact ? previewEmergency.length : emergency.length}
+            count={compact ? showEmergency.length : emergency.length}
             color={T.terra}
             compact={compact}
           />
-          {showEmergency.map(m => <MessageRow key={m.id} msg={m} compact={compact} />)}
+          {showEmergency.map(m => (
+            <MessageRow key={m.id} msg={m} compact={compact} showDraft={!compact && m.id === 1} />
+          ))}
         </>
       )}
 
-      {/* Inbox section */}
       {showInbox.length > 0 && (
         <>
           <SectionHeader
             emoji="📬"
             label="Inbox"
-            count={compact ? previewInbox.length : inbox.length}
+            count={compact ? showInbox.length : inbox.length}
             color={T.tan}
             compact={compact}
           />
-          {showInbox.map(m => <MessageRow key={m.id} msg={m} compact={compact} />)}
+          {showInbox.map(m => <MessageRow key={m.id} msg={m} compact={compact} showDraft={false} />)}
         </>
       )}
 
-      {/* Quiet section */}
       {showQuiet.length > 0 && (
         <>
           <SectionHeader
             emoji="✅"
             label="Quiet"
-            count={compact ? previewQuiet.length : quiet.length}
+            count={compact ? showQuiet.length : quiet.length}
             color={T.olive}
             compact={compact}
           />
-          {showQuiet.map(m => <MessageRow key={m.id} msg={m} compact={compact} />)}
+          {showQuiet.map(m => <MessageRow key={m.id} msg={m} compact={compact} showDraft={false} />)}
         </>
       )}
 
-      {/* Empty state hint (full mode only) */}
       {!compact && (
         <div
           style={{
