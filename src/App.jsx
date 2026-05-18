@@ -20,6 +20,9 @@ import AnnouncementBoard from './components/admin/AnnouncementBoard'
 import MaintenanceQueue from './components/admin/MaintenanceQueue'
 import TenantList from './components/admin/TenantList'
 
+// Quiet pre-order landing
+import QuietLandingPage from './components/QuietLandingPage'
+
 // Auth + shared
 import LoginPage from './components/shared/LoginPage'
 import UIShowcase from './components/UIShowcase'
@@ -77,6 +80,9 @@ export default function App() {
         <Route path='/admin/payments' element={<RequireAdmin><PaymentConfirm /></RequireAdmin>} />
         <Route path='/admin/announcements' element={<RequireAdmin><AnnouncementBoard /></RequireAdmin>} />
         <Route path='/admin/maintenance' element={<RequireAdmin><MaintenanceQueue /></RequireAdmin>} />
+
+        {/* Quiet pre-order landing — public, no auth */}
+        <Route path='/quiet' element={<QuietLandingPage />} />
 
         {/* Public landing */}
         <Route path='/home' element={<LandingPage />} />
